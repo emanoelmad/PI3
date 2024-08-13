@@ -7,6 +7,8 @@ using AppShowDoMilhao.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using AppShowDoMilhao.Services;
+using Microsoft.AspNetCore.Authorization;
 
 
 namespace AppShowDoMilhao.Controllers
@@ -27,6 +29,12 @@ namespace AppShowDoMilhao.Controllers
         [HttpPost("get-user")]
         public async Task<IActionResult> GetUserById([FromBody] GetUserByIdRequest request)
         {
+            var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+            if (usuarioId == null)
+            {
+                return Unauthorized(new { Success = false, Message = "Usuário não está logado" });
+            }
+
             if (request.Method != "GetUserById")
             {
                 return BadRequest(new
@@ -61,28 +69,92 @@ namespace AppShowDoMilhao.Controllers
             });
         }
 
+        [HttpGet("get-users")]
+        public async Task<IActionResult> GetUsers([FromBody] GetUsersRequest request)
+        {
+            var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+            if (usuarioId == null)
+            {
+                return Unauthorized(new { Success = false, Message = "Usuário não está logado" });
+            }
+
+            if (request.Method != "GetUsers")
+            {
+                return BadRequest(new
+                {
+                    Success = false,
+                    Message = "Método inválido, revise sua nomenclatura!"
+                });
+            }
+
+            var usuarios = await _context.Usuarios
+                                         .Where(u => u.DataDelecao == null)
+                                         .ToListAsync();
+
+            if (!usuarios.Any())
+            {
+                return NotFound(new
+                {
+                    Success = false,
+                    Message = "Nenhum usuário encontrado!"
+                });
+            }
+
+            // Mapear para um response model, se necessário
+            var usuariosResponse = usuarios.Select(usuario => new UsuarioResponse
+            {
+                UsuarioId = usuario.UsuarioId,
+                NomeCompleto = usuario.NomeCompleto,
+                Email = usuario.Email,
+                DataCriacao = usuario.DataCriacao
+            }).ToList();
+
+            return Ok(new
+            {
+                Success = true,
+                Usuarios = usuariosResponse
+            });
+        }
+
+        // Permite que este método seja acessado sem autenticação
+        [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
         {
-
             if (ModelState.IsValid)
             {
-                var usuario = new UsuarioModel
+                if (await _context.Usuarios.AnyAsync(u => u.Email == request.Email))
+                {
+                    return BadRequest(new
+                    {
+                        Success = false,
+                        Message = "Email já está em uso"
+                    });
+                }
+
+                // Gerar salt e hash da senha
+                var salt = PasswordService.GenerateSalt();
+                var hashedPassword = PasswordService.HashPassword(request.Senha, salt);
+
+                // Criar o novo usuário
+                var newUser = new UsuarioModel
                 {
                     NomeCompleto = request.NomeCompleto,
                     Email = request.Email,
                     Avatar = request.Avatar,
-                    Senha = _passwordHasher.HashPassword(new UsuarioModel(), request.Senha),
-                    DataCriacao = DateTime.UtcNow // Adiciona a data de criação atual
+                    PasswordSalt = salt,
+                    PasswordHash = hashedPassword,
+                    DataCriacao = DateTime.UtcNow
                 };
 
-                _context.Usuarios.Add(usuario);
+                // Adicionar o usuário ao banco de dados
+                _context.Usuarios.Add(newUser);
                 await _context.SaveChangesAsync();
 
                 return Ok(new
                 {
                     Success = true,
-                    UsuarioId = usuario.UsuarioId,
+                    newUser.UsuarioId,
                     Message = "Usuário registrado com sucesso!"
                 });
             }
@@ -92,6 +164,12 @@ namespace AppShowDoMilhao.Controllers
         [HttpPut("update-user")]
         public async Task<IActionResult> UpdateUserById([FromBody] UpdateUserByIdRequest request)
         {
+            var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+            if (usuarioId == null)
+            {
+                return Unauthorized(new { Success = false, Message = "Usuário não está logado" });
+            }
+
             var usuario = await _context.Usuarios.FindAsync(request.UsuarioId);
             if (usuario == null)
             {
@@ -146,6 +224,12 @@ namespace AppShowDoMilhao.Controllers
         [HttpDelete("delete-user")]
         public async Task<IActionResult> DeleteUserById([FromBody] DeleteUserByIdRequest request)
         {
+            var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+            if (usuarioId == null)
+            {
+                return Unauthorized(new { Success = false, Message = "Usuário não está logado" });
+            }
+
             if (request.Method != "DeleteUserById")
             {
                 return BadRequest(new
@@ -182,3 +266,4 @@ namespace AppShowDoMilhao.Controllers
 
     }
 }
+

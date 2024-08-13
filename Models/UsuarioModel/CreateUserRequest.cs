@@ -10,14 +10,14 @@ namespace AppShowDoMilhao.Models.UsuarioModel
         public string NomeCompleto { get; set; }
 
         [Required]
+        [EmailAddress]
         [StringLength(50)]
         public string Email { get; set; }
 
-        [StringLength(100)]
-        public string Avatar { get; set; }
-
         [Required]
-        [StringLength(100)]
+        [StringLength(100, MinimumLength = 6)]
         public string Senha { get; set; }
+
+        public string? Avatar { get; set; }
     }
 }

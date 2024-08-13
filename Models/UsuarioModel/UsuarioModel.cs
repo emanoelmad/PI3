@@ -17,11 +17,12 @@ namespace AppShowDoMilhao.Models.UsuarioModel
         public string Email { get; set; }
 
         [StringLength(100)]
-        public string Avatar { get; set; }
+        public string? Avatar { get; set; }
+        [Required]
+        public string PasswordHash { get; set; } // Hash da senha
 
         [Required]
-        [StringLength(100)]
-        public string Senha { get; set; }
+        public string PasswordSalt { get; set; } // Salt usado para gerar o hash
 
         [Required]
         public DateTime DataCriacao { get; set; }
