@@ -32,7 +32,7 @@ namespace AppShowDoMilhao.Controllers
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
             if (usuarioId == null)
             {
-                return Unauthorized(new { Success = false, Message = "Usuário não está logado" });
+                return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
             }
 
             if (request.Method != "GetUserById")
@@ -75,7 +75,7 @@ namespace AppShowDoMilhao.Controllers
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
             if (usuarioId == null)
             {
-                return Unauthorized(new { Success = false, Message = "Usuário não está logado" });
+                return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
             }
 
             if (request.Method != "GetUsers")
@@ -128,7 +128,7 @@ namespace AppShowDoMilhao.Controllers
                     return BadRequest(new
                     {
                         Success = false,
-                        Message = "Email já está em uso"
+                        Message = "Email já está em uso!"
                     });
                 }
 
@@ -167,7 +167,7 @@ namespace AppShowDoMilhao.Controllers
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
             if (usuarioId == null)
             {
-                return Unauthorized(new { Success = false, Message = "Usuário não está logado" });
+                return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
             }
 
             var usuario = await _context.Usuarios.FindAsync(request.UsuarioId);
@@ -227,7 +227,7 @@ namespace AppShowDoMilhao.Controllers
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
             if (usuarioId == null)
             {
-                return Unauthorized(new { Success = false, Message = "Usuário não está logado" });
+                return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
             }
 
             if (request.Method != "DeleteUserById")
