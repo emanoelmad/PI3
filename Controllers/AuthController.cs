@@ -23,6 +23,7 @@ namespace AppShowDoMilhao.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
+            // Verificar se o usuário existe com base no email
             var usuario = await _context.Usuarios
                                         .FirstOrDefaultAsync(u => u.Email == request.Email);
 
@@ -31,9 +32,11 @@ namespace AppShowDoMilhao.Controllers
                 return Unauthorized(new { Success = false, Message = "Email ou senha incorretos" });
             }
 
-            // Verifique a senha usando o hash e o salt armazenados
-            var hashedPassword = PasswordService.HashPassword(request.Password, usuario.PasswordSalt);
-            if (hashedPassword != usuario.PasswordHash)
+            // Gerar o hash da senha inserida utilizando o salt armazenado
+            var hashedPassword = PasswordService.HashPassword(request.Senha, usuario.PasswordSalt);
+
+            // Comparar o hash da senha inserida com o hash armazenado
+            if (!hashedPassword.SequenceEqual(usuario.PasswordHash))
             {
                 return Unauthorized(new { Success = false, Message = "Email ou senha incorretos" });
             }
@@ -43,6 +46,7 @@ namespace AppShowDoMilhao.Controllers
 
             return Ok(new { Success = true, Message = "Login bem-sucedido" });
         }
+
 
         [HttpPost("logout")]
         public IActionResult Logout()

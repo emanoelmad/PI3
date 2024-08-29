@@ -17,7 +17,7 @@ namespace AppShowDoMilhao.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<UsuarioModel>()
-                .ToTable("Usuario");
+                .ToTable("Usuarios");
         }
     }
 }

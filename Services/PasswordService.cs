@@ -6,22 +6,21 @@ namespace AppShowDoMilhao.Services
 {
     public static class PasswordService
     {
-        public static string GenerateSalt()
+        public static byte[] GenerateSalt()
         {
             var saltBytes = new byte[16];
             using (var rng = RandomNumberGenerator.Create())
             {
                 rng.GetBytes(saltBytes);
             }
-            return Convert.ToBase64String(saltBytes);
+            return saltBytes;
         }
 
-        public static string HashPassword(string password, string salt)
+        public static byte[] HashPassword(string password, byte[] salt)
         {
-            using (var hmac = new HMACSHA512(Convert.FromBase64String(salt)))
+            using (var hmac = new HMACSHA512(salt))
             {
-                var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(hash);
+                return hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
             }
         }
     }

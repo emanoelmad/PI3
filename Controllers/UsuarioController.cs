@@ -26,94 +26,142 @@ namespace AppShowDoMilhao.Controllers
             _passwordHasher = new PasswordHasher<UsuarioModel>(); // Inicializa PasswordHasher
         }
 
-        [HttpPost("get-user")]
+        [HttpGet("get-user")]
         public async Task<IActionResult> GetUserById([FromBody] GetUserByIdRequest request)
         {
-            var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
-            if (usuarioId == null)
+            try
             {
-                return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
-            }
-
-            if (request.Method != "GetUserById")
-            {
-                return BadRequest(new
+                // Validação do login
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                if (usuarioId == null)
                 {
-                    Success = false,
-                    Message = "Método inválido, revise sua nomenclatura!"
+                    return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
+                }
+
+                // Busca o usuário pelo ID fornecido
+                var usuario = await _context.Usuarios
+                    .Where(u => u.UsuarioId == request.UsuarioId && u.DataDelecao == null) // Verifica se o usuário existe e não foi deletado
+                    .Select(u => new UserResponse
+                    {
+                        UsuarioId = u.UsuarioId,
+                        Nome = u.Nome,
+                        Nickname = u.Nickname,
+                        Email = u.Email,
+                        Avatar = u.Avatar,
+                        NumeroPartidasJogadas = u.NumeroPartidasJogadas,
+                        NumeroTotalPerguntas = u.NumeroTotalPerguntas,
+                        PremiacaoTotal = u.PremiacaoTotal,
+                        QuantidadeUtilizacaoAjuda = u.QuantidadeUtilizacaoAjuda,
+                        NumeroDerrotasErro = u.NumeroDerrotasErro,
+                        NumeroDerrotasParada = u.NumeroDerrotasParada,
+                        DataCriacao = u.DataCriacao
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (usuario == null)
+                {
+                    return NotFound(new
+                    {
+                        Success = false,
+                        Message = "Usuário não encontrado ou foi deletado!"
+                    });
+                }
+
+                // Retorna os dados do usuário
+                return Ok(new
+                {
+                    Success = true,
+                    Data = usuario
                 });
             }
-
-            var usuario = await _context.Usuarios.FindAsync(request.UsuarioId);
-            if (usuario == null)
+            catch (Exception ex)
             {
-                return NotFound(new
+                // Tratamento de erros genéricos
+                return StatusCode(500, new
                 {
                     Success = false,
-                    Message = "Usuário não encontrado pelo Id fornecido!"
+                    Message = "Ocorreu um erro ao processar sua solicitação.",
+                    Details = ex.Message // Em produção, você pode querer remover ou logar os detalhes do erro ao invés de retorná-los.
                 });
             }
-
-            var usuarioResponse = new UsuarioResponse
-            {
-                UsuarioId = usuario.UsuarioId,
-                NomeCompleto = usuario.NomeCompleto,
-                Email = usuario.Email,
-                DataCriacao = usuario.DataCriacao
-            };
-
-            return Ok(new
-            {
-                Success = true,
-                Usuario = usuarioResponse
-            });
         }
+
 
         [HttpGet("get-users")]
         public async Task<IActionResult> GetUsers([FromBody] GetUsersRequest request)
         {
-            var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
-            if (usuarioId == null)
+            try
             {
-                return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
-            }
-
-            if (request.Method != "GetUsers")
-            {
-                return BadRequest(new
+                // Validação do login
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                if (usuarioId == null)
                 {
-                    Success = false,
-                    Message = "Método inválido, revise sua nomenclatura!"
+                    return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
+                }
+
+                // Consulta base de usuários
+                var query = _context.Usuarios.Where(u => u.DataDelecao == null).AsQueryable();
+
+                // Aplicação dos filtros, se fornecidos
+                if (!string.IsNullOrEmpty(request.Nome))
+                {
+                    query = query.Where(u => u.Nome.Contains(request.Nome));
+                }
+
+                if (!string.IsNullOrEmpty(request.Nickname))
+                {
+                    query = query.Where(u => u.Nickname.Contains(request.Nickname));
+                }
+
+                if (!string.IsNullOrEmpty(request.Email))
+                {
+                    query = query.Where(u => u.Email.Contains(request.Email));
+                }
+
+                // Execução da consulta e mapeamento para UserResponse
+                var usuarios = await query.Select(u => new UserResponse
+                {
+                    UsuarioId = u.UsuarioId,
+                    Nome = u.Nome,
+                    Nickname = u.Nickname,
+                    Email = u.Email,
+                    Avatar = u.Avatar,
+                    NumeroPartidasJogadas = u.NumeroPartidasJogadas,
+                    NumeroTotalPerguntas = u.NumeroTotalPerguntas,
+                    PremiacaoTotal = u.PremiacaoTotal,
+                    QuantidadeUtilizacaoAjuda = u.QuantidadeUtilizacaoAjuda,
+                    NumeroDerrotasErro = u.NumeroDerrotasErro,
+                    NumeroDerrotasParada = u.NumeroDerrotasParada,
+                    DataCriacao = u.DataCriacao
+                }).ToListAsync();
+
+                // Verifica se a lista de usuários está vazia
+                if (!usuarios.Any())
+                {
+                    return NotFound(new
+                    {
+                        Success = false,
+                        Message = "Nenhum usuário encontrado!"
+                    });
+                }
+
+                // Retorna a lista de usuários
+                return Ok(new
+                {
+                    Success = true,
+                    Data = usuarios
                 });
             }
-
-            var usuarios = await _context.Usuarios
-                                         .Where(u => u.DataDelecao == null)
-                                         .ToListAsync();
-
-            if (!usuarios.Any())
+            catch (Exception ex)
             {
-                return NotFound(new
+                // Tratamento de erros genéricos
+                return StatusCode(500, new
                 {
                     Success = false,
-                    Message = "Nenhum usuário encontrado!"
+                    Message = "Ocorreu um erro ao processar sua solicitação.",
+                    Details = ex.Message // Em produção, você pode querer remover ou logar os detalhes do erro ao invés de retorná-los.
                 });
             }
-
-            // Mapear para um response model, se necessário
-            var usuariosResponse = usuarios.Select(usuario => new UsuarioResponse
-            {
-                UsuarioId = usuario.UsuarioId,
-                NomeCompleto = usuario.NomeCompleto,
-                Email = usuario.Email,
-                DataCriacao = usuario.DataCriacao
-            }).ToList();
-
-            return Ok(new
-            {
-                Success = true,
-                Usuarios = usuariosResponse
-            });
         }
 
         // Permite que este método seja acessado sem autenticação
@@ -121,148 +169,204 @@ namespace AppShowDoMilhao.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequest request)
         {
-            if (ModelState.IsValid)
-            {
-                if (await _context.Usuarios.AnyAsync(u => u.Email == request.Email))
-                {
-                    return BadRequest(new
-                    {
-                        Success = false,
-                        Message = "Email já está em uso!"
-                    });
-                }
-
-                // Gerar salt e hash da senha
-                var salt = PasswordService.GenerateSalt();
-                var hashedPassword = PasswordService.HashPassword(request.Senha, salt);
-
-                // Criar o novo usuário
-                var newUser = new UsuarioModel
-                {
-                    NomeCompleto = request.NomeCompleto,
-                    Email = request.Email,
-                    Avatar = request.Avatar,
-                    PasswordSalt = salt,
-                    PasswordHash = hashedPassword,
-                    DataCriacao = DateTime.UtcNow
-                };
-
-                // Adicionar o usuário ao banco de dados
-                _context.Usuarios.Add(newUser);
-                await _context.SaveChangesAsync();
-
-                return Ok(new
-                {
-                    Success = true,
-                    newUser.UsuarioId,
-                    Message = "Usuário registrado com sucesso!"
-                });
-            }
-            return BadRequest(ModelState);
-        }
-
-        [HttpPut("update-user")]
-        public async Task<IActionResult> UpdateUserById([FromBody] UpdateUserByIdRequest request)
-        {
-            var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
-            if (usuarioId == null)
-            {
-                return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
-            }
-
-            var usuario = await _context.Usuarios.FindAsync(request.UsuarioId);
-            if (usuario == null)
-            {
-                return NotFound(new
-                {
-                    Success = false,
-                    Message = "Usuário não encontrado pelo Id informado!"
-                });
-            }
-
-            if (ModelState.IsValid)
-            {
-                if (!string.IsNullOrEmpty(request.NomeCompleto))
-                {
-                    usuario.NomeCompleto = request.NomeCompleto;
-                }
-                if (!string.IsNullOrEmpty(request.Email))
-                {
-                    usuario.Email = request.Email;
-                }
-                if (!string.IsNullOrEmpty(request.Avatar))
-                {
-                    usuario.Avatar = request.Avatar;
-                }
-
-                try
-                {
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!_context.Usuarios.Any(e => e.UsuarioId == request.UsuarioId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return Ok(new
-                {
-                    Success = true,
-                    UsuarioId = usuario.UsuarioId,
-                    Message = "Usuário atualizado com sucesso!"
-                });
-            }
-            return BadRequest(ModelState);
-        }
-
-
-        [HttpDelete("delete-user")]
-        public async Task<IActionResult> DeleteUserById([FromBody] DeleteUserByIdRequest request)
-        {
-            var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
-            if (usuarioId == null)
-            {
-                return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
-            }
-
-            if (request.Method != "DeleteUserById")
-            {
-                return BadRequest(new
-                {
-                    Success = false,
-                    Message = "Método inválido, revise sua nomenclatura!"
-                });
-            }
-
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var usuario = await _context.Usuarios.FindAsync(request.UsuarioId);
-            if (usuario == null)
+            // Verifica se o email já está em uso
+            if (await _context.Usuarios.AnyAsync(u => u.Email == request.Email))
             {
-                return NotFound(new
+                return BadRequest(new
                 {
                     Success = false,
-                    Message = "Usuário não encontrado pelo Id informado!"
+                    Message = "Email já está em uso!"
                 });
             }
 
-            _context.Usuarios.Remove(usuario);
+            // Gerar salt e hash da senha
+            var salt = PasswordService.GenerateSalt();
+            var hashedPassword = PasswordService.HashPassword(request.Senha, salt);
+
+            // Criar o novo usuário
+            var newUser = new UsuarioModel
+            {
+                Nome = request.Nome,
+                Nickname = request.Nickname,
+                Email = request.Email,
+                Avatar = request.Avatar,
+                PasswordSalt = salt,
+                PasswordHash = hashedPassword,
+                DataCriacao = DateTime.UtcNow // Definindo a data de criação
+                                              // DataDelecao é deixado como null inicialmente
+            };
+
+            // Adicionar o usuário ao banco de dados
+            _context.Usuarios.Add(newUser);
             await _context.SaveChangesAsync();
+
             return Ok(new
             {
                 Success = true,
-                UsuarioId = usuario.UsuarioId,
-                Message = "Usuário deletado com sucesso!"
+                UsuarioId = newUser.UsuarioId,
+                Message = "Usuário registrado com sucesso!"
             });
         }
+
+        [HttpPut("update-user")]
+        public async Task<IActionResult> UpdateUserById([FromBody] UpdateUserByIdRequest request)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { Success = false, Message = "Dados inválidos." });
+            }
+
+            // Verifica se o usuário está logado
+            var loggedInUserId = HttpContext.Session.GetInt32("UsuarioId");
+            if (loggedInUserId == null)
+            {
+                return Unauthorized(new { Success = false, Message = "Usuário não está logado." });
+            }
+
+            // Verifica se o usuário está tentando atualizar seu próprio perfil
+            if (loggedInUserId.Value != request.UsuarioId)
+            {
+                return Forbid(); // Não é necessário fornecer uma mensagem aqui. O `Forbid` é um status 403.
+            }
+
+            try
+            {
+                var usuario = await _context.Usuarios.FindAsync(request.UsuarioId);
+                if (usuario == null)
+                {
+                    return NotFound(new { Success = false, Message = "Usuário não encontrado." });
+                }
+
+                // Atualiza os campos fornecidos no request
+                if (!string.IsNullOrEmpty(request.Nome))
+                {
+                    usuario.Nome = request.Nome;
+                }
+
+                if (!string.IsNullOrEmpty(request.Nickname))
+                {
+                    usuario.Nickname = request.Nickname;
+                }
+
+                if (!string.IsNullOrEmpty(request.Email))
+                {
+                    usuario.Email = request.Email;
+                }
+
+                if (!string.IsNullOrEmpty(request.Avatar))
+                {
+                    usuario.Avatar = request.Avatar;
+                }
+
+                // Atualiza a senha, se fornecida
+                if (!string.IsNullOrEmpty(request.Senha))
+                {
+                    var salt = PasswordService.GenerateSalt();
+                    var hashedPassword = PasswordService.HashPassword(request.Senha, salt);
+                    usuario.PasswordHash = hashedPassword;
+                    usuario.PasswordSalt = salt;
+                }
+
+                // Atualiza os outros campos, se fornecidos
+                if (request.NumeroPartidasJogadas.HasValue)
+                {
+                    usuario.NumeroPartidasJogadas = request.NumeroPartidasJogadas.Value;
+                }
+
+                if (request.NumeroTotalPerguntas.HasValue)
+                {
+                    usuario.NumeroTotalPerguntas = request.NumeroTotalPerguntas.Value;
+                }
+
+                if (request.PremiacaoTotal.HasValue)
+                {
+                    usuario.PremiacaoTotal = request.PremiacaoTotal.Value;
+                }
+
+                if (request.QuantidadeUtilizacaoAjuda.HasValue)
+                {
+                    usuario.QuantidadeUtilizacaoAjuda = request.QuantidadeUtilizacaoAjuda.Value;
+                }
+
+                if (request.NumeroDerrotasErro.HasValue)
+                {
+                    usuario.NumeroDerrotasErro = request.NumeroDerrotasErro.Value;
+                }
+
+                if (request.NumeroDerrotasParada.HasValue)
+                {
+                    usuario.NumeroDerrotasParada = request.NumeroDerrotasParada.Value;
+                }
+
+                // Salva as mudanças no banco de dados
+                _context.Usuarios.Update(usuario);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { Success = true, Message = "Usuário atualizado com sucesso." });
+            }
+            catch (Exception ex)
+            {
+                // Tratamento de erros genéricos
+                return StatusCode(500, new
+                {
+                    Success = false,
+                    Message = "Ocorreu um erro ao processar sua solicitação.",
+                    Details = ex.Message // Em produção, considere remover ou logar os detalhes do erro ao invés de retorná-los.
+                });
+            }
+        }
+
+
+
+        [HttpDelete("delete-user")]
+        public async Task<IActionResult> DeleteUserById([FromBody] DeleteUserByIdRequest request)
+        {
+            try
+            {
+                // Validação do login
+                var loggedInUserId = HttpContext.Session.GetInt32("UsuarioId");
+                if (loggedInUserId == null)
+                {
+                    return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
+                }
+
+                // Verifica se o usuário a ser excluído existe
+                var usuario = await _context.Usuarios.FindAsync(request.UsuarioId);
+                if (usuario == null)
+                {
+                    return NotFound(new { Success = false, Message = "Usuário não encontrado!" });
+                }
+
+                // Verifica se o usuário logado tem permissão para excluir este usuário
+                if (loggedInUserId.Value != request.UsuarioId)
+                {
+                    return Forbid();
+                }
+
+                // Marca o usuário como excluído
+                usuario.DataDelecao = DateTime.UtcNow; // Atualiza a data de exclusão
+                _context.Usuarios.Update(usuario);
+                await _context.SaveChangesAsync();
+
+                return Ok(new { Success = true, Message = "Usuário marcado como excluído com sucesso!" });
+            }
+            catch (Exception ex)
+            {
+                // Tratamento de erros genéricos
+                return StatusCode(500, new
+                {
+                    Success = false,
+                    Message = "Ocorreu um erro ao processar sua solicitação.",
+                    Details = ex.Message // Em produção, você pode querer remover ou logar os detalhes do erro ao invés de retorná-los.
+                });
+            }
+        }
+
 
     }
 }
