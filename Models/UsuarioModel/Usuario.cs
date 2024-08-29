@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AppShowDoMilhao.Models.UsuarioModel
 {
-    public class UsuarioModel
+    public class Usuario
     {
         [Key]
         [Column("id_usuario")]

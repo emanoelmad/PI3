@@ -18,12 +18,12 @@ namespace AppShowDoMilhao.Controllers
     public class UsuarioController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly PasswordHasher<UsuarioModel> _passwordHasher; // Adicionado para PasswordHasher
+        private readonly PasswordHasher<Usuario> _passwordHasher; // Adicionado para PasswordHasher
 
         public UsuarioController(ApplicationDbContext context)
         {
             _context = context;
-            _passwordHasher = new PasswordHasher<UsuarioModel>(); // Inicializa PasswordHasher
+            _passwordHasher = new PasswordHasher<Usuario>(); // Inicializa PasswordHasher
         }
 
         [HttpGet("get-user")]
@@ -189,7 +189,7 @@ namespace AppShowDoMilhao.Controllers
             var hashedPassword = PasswordService.HashPassword(request.Senha, salt);
 
             // Criar o novo usuário
-            var newUser = new UsuarioModel
+            var newUser = new Usuario
             {
                 Nome = request.Nome,
                 Nickname = request.Nickname,
