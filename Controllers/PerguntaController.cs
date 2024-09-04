@@ -47,14 +47,74 @@ namespace AppShowDoMilhao.Controllers
                     DataCriacao = DateTime.UtcNow
                 };
 
-                _context.Perguntas.Add(pergunta); 
+                _context.Perguntas.Add(pergunta);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { Success = true, Message = "Pergunta adicionada com sucesso!" });
+                // Seleciona cinco usuários aleatórios
+                var usuarios = _context.Usuarios.OrderBy(u => Guid.NewGuid()).Take(5).ToList();
+
+                foreach (var usuario in usuarios)
+                {
+                    var aprovacao = new PerguntaAprovacao
+                    {
+                        IdPergunta = pergunta.IdPergunta,
+                        IdUsuario = usuario.UsuarioId,  // Corrigido para usar usuario.IdUsuario
+                        Aprovado = null // Inicialmente indefinido
+                    };
+                    _context.PerguntaAprovacoes.Add(aprovacao);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new { Success = true, Message = "Pergunta adicionada e enviada para aprovação!" });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Success = false, Message = "Ocorreu um erro ao adicionar a pergunta.", Details = ex.Message });
+                return StatusCode(500, new { Success = false, Message = "Erro ao adicionar a pergunta.", Details = ex.Message });
+            }
+        }
+
+        [HttpPost("aprovar")]
+        public async Task<IActionResult> AprovarPergunta([FromBody] AprovarPerguntaRequest request)
+        {
+            try
+            {
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                if (usuarioId == null)
+                {
+                    return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
+                }
+
+                var aprovacao = await _context.PerguntaAprovacoes
+                    .FirstOrDefaultAsync(a => a.IdPergunta == request.IdPergunta && a.IdUsuario == usuarioId.Value);
+
+                if (aprovacao == null)
+                {
+                    return NotFound(new { Success = false, Message = "Aprovação não encontrada!" });
+                }
+
+                aprovacao.Aprovado = request.Aprovado;
+                aprovacao.DataAprovacao = DateTime.UtcNow; // Atualiza a data de aprovação
+                await _context.SaveChangesAsync();
+
+                // Verifica quantas aprovações a pergunta já possui
+                var totalAprovacoes = await _context.PerguntaAprovacoes
+                    .CountAsync(a => a.IdPergunta == request.IdPergunta && a.Aprovado == true);
+
+                if (totalAprovacoes >= 5)
+                {
+                    var pergunta = await _context.Perguntas.FindAsync(request.IdPergunta);
+                    pergunta.Status = "Aprovada";
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new { Success = true, Message = "Pergunta aprovada!" });
+                }
+
+                return Ok(new { Success = true, Message = "Aprovação registrada!" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = "Erro ao aprovar a pergunta.", Details = ex.Message });
             }
         }
 
@@ -134,8 +194,7 @@ namespace AppShowDoMilhao.Controllers
                     AlternativaA = pergunta.Alternativa_A,
                     AlternativaB = pergunta.Alternativa_B,
                     AlternativaC = pergunta.Alternativa_C,
-                    AlternativaD = pergunta.Alternativa_D,
-                    RespostaCorreta = pergunta.RespostaCorreta,
+                    AlternativaD = pergunta.Alternativa_D
                 };
 
                 return Ok(new { Success = true, Data = perguntaResponse });

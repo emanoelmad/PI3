@@ -7,17 +7,17 @@ namespace AppShowDoMilhao.Models.UsuarioModel
     public class Usuario
     {
         [Key]
-        [Column("id_usuario")]
+        [Column("IdUsuario")]
         public int UsuarioId { get; set; }
 
         [Required]
         [StringLength(100)]
-        [Column("nome")]
+        [Column("Nome")]
         public string Nome { get; set; }
 
         [Required]
         [StringLength(50)]
-        [Column("nickname")]
+        [Column("Nickname")]
         public string Nickname { get; set; }
 
         [Required]
@@ -26,25 +26,25 @@ namespace AppShowDoMilhao.Models.UsuarioModel
         public string Email { get; set; }
 
         [StringLength(255)]
-        [Column("avatar")]
+        [Column("Avatar")]
         public string? Avatar { get; set; }
 
-        [Column("numero_partidas_jogadas")]
+        [Column("Numero_PartidasJogadas")]
         public int NumeroPartidasJogadas { get; set; } = 0;
 
-        [Column("numero_total_perguntas")]
+        [Column("Numero_TotalPerguntas")]
         public int NumeroTotalPerguntas { get; set; } = 0;
 
-        [Column("premiacao_total")]
+        [Column("PremiacaoTotal")]
         public decimal PremiacaoTotal { get; set; } = 0.00m;
 
-        [Column("quantidade_utilizacao_ajuda")]
+        [Column("Quant_Utilizacao_Ajuda")]
         public int QuantidadeUtilizacaoAjuda { get; set; } = 0;
 
-        [Column("numero_derrotas_erro")]
+        [Column("Numero_Derrotas_Erro")]
         public int NumeroDerrotasErro { get; set; } = 0;
 
-        [Column("numero_derrotas_parada")]
+        [Column("Numero_Derrotas_Parada")]
         public int NumeroDerrotasParada { get; set; } = 0;
 
         [Required]
@@ -56,10 +56,10 @@ namespace AppShowDoMilhao.Models.UsuarioModel
         public byte[] PasswordSalt { get; set; } 
 
         [Required]
-        [Column("data_criacao")]
+        [Column("DataCriacao")]
         public DateTime DataCriacao { get; set; }
 
-        [Column("data_delecao")]
+        [Column("DataDelecao")]
         public DateTime? DataDelecao { get; set; }
     }
 }
