@@ -130,15 +130,12 @@ namespace AppShowDoMilhao.Controllers
                 var perguntaResponse = new PerguntaResponse
                 {
                     IdPergunta = pergunta.IdPergunta,
-                    IdUsuario = pergunta.IdUsuario,
                     Enunciado = pergunta.Enunciado,
                     AlternativaA = pergunta.Alternativa_A,
                     AlternativaB = pergunta.Alternativa_B,
                     AlternativaC = pergunta.Alternativa_C,
                     AlternativaD = pergunta.Alternativa_D,
                     RespostaCorreta = pergunta.RespostaCorreta,
-                    Status = pergunta.Status,
-                    DataCriacao = pergunta.DataCriacao
                 };
 
                 return Ok(new { Success = true, Data = perguntaResponse });
@@ -172,13 +169,31 @@ namespace AppShowDoMilhao.Controllers
                     return NotFound(new { Success = false, Message = "Pergunta não encontrada!" });
                 }
 
-                // Atualiza os dados da pergunta
-                pergunta.Enunciado = request.Enunciado;
-                pergunta.Alternativa_A = request.AlternativaA;
-                pergunta.Alternativa_B = request.AlternativaB;
-                pergunta.Alternativa_C = request.AlternativaC;
-                pergunta.Alternativa_D = request.AlternativaD;
-                pergunta.RespostaCorreta = request.RespostaCorreta;
+                // Atualiza os campos da pergunta somente se forem fornecidos na request
+                if (!string.IsNullOrEmpty(request.Enunciado))
+                {
+                    pergunta.Enunciado = request.Enunciado;
+                }
+                if (!string.IsNullOrEmpty(request.AlternativaA))
+                {
+                    pergunta.Alternativa_A = request.AlternativaA;
+                }
+                if (!string.IsNullOrEmpty(request.AlternativaB))
+                {
+                    pergunta.Alternativa_B = request.AlternativaB;
+                }
+                if (!string.IsNullOrEmpty(request.AlternativaC))
+                {
+                    pergunta.Alternativa_C = request.AlternativaC;
+                }
+                if (!string.IsNullOrEmpty(request.AlternativaD))
+                {
+                    pergunta.Alternativa_D = request.AlternativaD;
+                }
+                if (!string.IsNullOrEmpty(request.RespostaCorreta))
+                {
+                    pergunta.RespostaCorreta = request.RespostaCorreta;
+                }
 
                 _context.Perguntas.Update(pergunta);
                 await _context.SaveChangesAsync();
@@ -190,6 +205,7 @@ namespace AppShowDoMilhao.Controllers
                 return StatusCode(500, new { Success = false, Message = "Ocorreu um erro ao atualizar a pergunta.", Details = ex.Message });
             }
         }
+
 
 
         // 8. Revisão de Pergunta

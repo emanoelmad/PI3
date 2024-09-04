@@ -24,7 +24,7 @@ namespace AppShowDoMilhao.Models
         public string AlternativaD { get; set; }
 
         [Required]
-        [StringLength(1)]
+        [StringLength(255)]
         public string RespostaCorreta { get; set; }
     }
 }

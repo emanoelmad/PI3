@@ -1,4 +1,5 @@
 ﻿using AppShowDoMilhao.Models;
+using AppShowDoMilhao.Models.PartidaModel;
 using AppShowDoMilhao.Models.UsuarioModel;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,7 +13,8 @@ namespace AppShowDoMilhao.Data
         }
 
         public DbSet<Usuario> Usuarios { get; set; }
-        public DbSet<Pergunta> Perguntas { get; set; }  // Corrigido para DbSet<Pergunta>
+        public DbSet<Pergunta> Perguntas { get; set; }
+        public DbSet<Partida> Partidas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -20,7 +22,10 @@ namespace AppShowDoMilhao.Data
                 .ToTable("Usuarios");
 
             modelBuilder.Entity<Pergunta>()
-                .ToTable("Perguntas");
+            .ToTable("Perguntas");
+
+            modelBuilder.Entity<Partida>()
+                .ToTable("Partidas");
         }
     }
 }

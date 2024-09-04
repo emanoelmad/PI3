@@ -16,6 +16,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Folder Include="Models\RevisaoModel\" />
 		<Folder Include="Views\Shared\" />
 		<Folder Include="Views\UsuarioView\" />
 	</ItemGroup>

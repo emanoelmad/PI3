@@ -33,7 +33,7 @@ namespace AppShowDoMilhao.Models
         public string Alternativa_D { get; set; }
 
         [Required]
-        [StringLength(1)]
+        [StringLength(255)]
         public string RespostaCorreta { get; set; }
 
         [StringLength(20)]
