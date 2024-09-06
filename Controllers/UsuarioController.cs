@@ -26,21 +26,21 @@ namespace AppShowDoMilhao.Controllers
             _passwordHasher = new PasswordHasher<Usuario>(); // Inicializa PasswordHasher
         }
 
-        [HttpGet("get-user")]
-        public async Task<IActionResult> GetUserById([FromBody] GetUserByIdRequest request)
+        [HttpGet("get-user/{usuarioId}")]
+        public async Task<IActionResult> GetUserById(int usuarioId)
         {
             try
             {
                 // Validação do login
-                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
-                if (usuarioId == null)
+                var sessionUsuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                if (sessionUsuarioId == null)
                 {
                     return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
                 }
 
                 // Busca o usuário pelo ID fornecido
                 var usuario = await _context.Usuarios
-                    .Where(u => u.UsuarioId == request.UsuarioId && u.DataDelecao == null) // Verifica se o usuário existe e não foi deletado
+                    .Where(u => u.UsuarioId == usuarioId && u.DataDelecao == null) // Verifica se o usuário existe e não foi deletado
                     .Select(u => new UserResponse
                     {
                         UsuarioId = u.UsuarioId,
@@ -49,7 +49,9 @@ namespace AppShowDoMilhao.Controllers
                         Email = u.Email,
                         Avatar = u.Avatar,
                         NumeroPartidasJogadas = u.NumeroPartidasJogadas,
-                        NumeroTotalPerguntas = u.NumeroTotalPerguntas,
+                        NumTotalPerguntasRespondidas = u.NumTotalPerguntasRespondidas,
+                        NumTotalPerguntasRejeitadas = u.NumTotalPerguntasRejeitadas,
+                        NumTotalPerguntasAceita = u.NumTotalPerguntasAceita,
                         PremiacaoTotal = u.PremiacaoTotal,
                         QuantidadeUtilizacaoAjuda = u.QuantidadeUtilizacaoAjuda,
                         NumeroDerrotasErro = u.NumeroDerrotasErro,
@@ -85,6 +87,7 @@ namespace AppShowDoMilhao.Controllers
                 });
             }
         }
+
 
 
         [HttpGet("get-users")]
@@ -127,7 +130,9 @@ namespace AppShowDoMilhao.Controllers
                     Email = u.Email,
                     Avatar = u.Avatar,
                     NumeroPartidasJogadas = u.NumeroPartidasJogadas,
-                    NumeroTotalPerguntas = u.NumeroTotalPerguntas,
+                    NumTotalPerguntasRespondidas = u.NumTotalPerguntasRespondidas,
+                    NumTotalPerguntasRejeitadas = u.NumTotalPerguntasRejeitadas,
+                    NumTotalPerguntasAceita = u.NumTotalPerguntasAceita,
                     PremiacaoTotal = u.PremiacaoTotal,
                     QuantidadeUtilizacaoAjuda = u.QuantidadeUtilizacaoAjuda,
                     NumeroDerrotasErro = u.NumeroDerrotasErro,
@@ -197,8 +202,8 @@ namespace AppShowDoMilhao.Controllers
                 Avatar = request.Avatar,
                 PasswordSalt = salt,
                 PasswordHash = hashedPassword,
-                DataCriacao = DateTime.UtcNow // Definindo a data de criação
-                                              // DataDelecao é deixado como null inicialmente
+                DataCriacao = DateTime.UtcNow 
+                                              
             };
 
             // Adicionar o usuário ao banco de dados
@@ -278,9 +283,9 @@ namespace AppShowDoMilhao.Controllers
                     usuario.NumeroPartidasJogadas = request.NumeroPartidasJogadas.Value;
                 }
 
-                if (request.NumeroTotalPerguntas.HasValue)
+                if (request.NumTotalPerguntasRespondidas.HasValue)
                 {
-                    usuario.NumeroTotalPerguntas = request.NumeroTotalPerguntas.Value;
+                    usuario.NumTotalPerguntasRespondidas = request.NumTotalPerguntasRespondidas.Value;
                 }
 
                 if (request.PremiacaoTotal.HasValue)

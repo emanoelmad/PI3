@@ -32,8 +32,14 @@ namespace AppShowDoMilhao.Models.UsuarioModel
         [Column("Numero_PartidasJogadas")]
         public int NumeroPartidasJogadas { get; set; } = 0;
 
-        [Column("Numero_TotalPerguntas")]
-        public int NumeroTotalPerguntas { get; set; } = 0;
+        [Column("NumTotalPerguntasRespondidas")]
+        public int NumTotalPerguntasRespondidas { get; set; } = 0;
+
+        [Column("NumTotalPerguntasRejeitadas")]
+        public int NumTotalPerguntasRejeitadas { get; set; } = 0;
+
+        [Column("NumTotalPerguntasAceita")]
+        public int NumTotalPerguntasAceita { get; set; } = 0;
 
         [Column("PremiacaoTotal")]
         public decimal PremiacaoTotal { get; set; } = 0.00m;

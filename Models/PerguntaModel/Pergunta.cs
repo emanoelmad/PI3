@@ -41,6 +41,8 @@ namespace AppShowDoMilhao.Models
 
         public DateTime DataCriacao { get; set; } = DateTime.UtcNow;
 
+        public DateTime? DataAtualizacao { get; set; }
+
         public DateTime? DataDelecao { get; set; }
 
     }

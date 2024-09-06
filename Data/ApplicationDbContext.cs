@@ -17,20 +17,24 @@ namespace AppShowDoMilhao.Data
         public DbSet<Pergunta> Perguntas { get; set; }
         public DbSet<Partida> Partidas { get; set; }
         public DbSet<PerguntaAprovacao> PerguntaAprovacoes { get; set; }
+        public DbSet<DenunciaPergunta> DenunciaPerguntas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Usuario>()
-                .ToTable("Usuarios");
+                 .ToTable("Usuarios");
 
             modelBuilder.Entity<Pergunta>()
-            .ToTable("Perguntas");
+                 .ToTable("Perguntas");
 
             modelBuilder.Entity<Partida>()
-                .ToTable("Partidas");
+                 .ToTable("Partidas");
 
             modelBuilder.Entity<PerguntaAprovacao>()
-                .ToTable("PerguntaAprovacoes");
+                 .ToTable("PerguntaAprovacoes");
+
+            modelBuilder.Entity<DenunciaPergunta>()
+                 .ToTable("DenunciaPerguntas");
         }
     }
 }

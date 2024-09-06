@@ -26,7 +26,7 @@ namespace AppShowDoMilhao.Models.UsuarioModel
 
         // Outras propriedades que podem ser atualizadas
         public int? NumeroPartidasJogadas { get; set; }
-        public int? NumeroTotalPerguntas { get; set; }
+        public int? NumTotalPerguntasRespondidas { get; set; }
         public decimal? PremiacaoTotal { get; set; }
         public int? QuantidadeUtilizacaoAjuda { get; set; }
         public int? NumeroDerrotasErro { get; set; }

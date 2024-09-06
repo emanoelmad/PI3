@@ -7,6 +7,7 @@ using AppShowDoMilhao.Data;
 using AppShowDoMilhao.Models.PartidaModel;
 using AppShowDoMilhao.Models.PerguntaModel;
 using AppShowDoMilhao.Models;
+using AppShowDoMilhao.Services;
 
 namespace AppShowDoMilhao.Controllers
 {
@@ -57,34 +58,55 @@ namespace AppShowDoMilhao.Controllers
         [HttpGet("perguntaAtual/{partidaId}")]
         public async Task<IActionResult> ObterPerguntaAtual(int partidaId)
         {
-            var partida = await _context.Partidas.FindAsync(partidaId);
-            if (partida == null || partida.Status != "Em Andamento")
+            try
             {
-                return NotFound(new { Success = false, Message = "Partida não encontrada ou já finalizada!" });
+                var partida = await _context.Partidas.FindAsync(partidaId);
+                if (partida == null || partida.Status != "Em Andamento")
+                {
+                    return NotFound(new { Success = false, Message = "Partida não encontrada ou já finalizada!" });
+                }
+
+                var pergunta = await _context.Perguntas
+                    .Where(p => p.DataDelecao == null)
+                    .OrderBy(p => Guid.NewGuid()) // Obter pergunta aleatória
+                    .FirstOrDefaultAsync();
+
+                if (pergunta == null)
+                {
+                    return NotFound(new { Success = false, Message = "Nenhuma pergunta disponível no momento!" });
+                }
+
+                // Cria uma lista das alternativas
+                var alternativas = new List<string>
+                {
+                    pergunta.Alternativa_A,
+                    pergunta.Alternativa_B,
+                    pergunta.Alternativa_C,
+                    pergunta.Alternativa_D
+                };
+
+                // Embaralha as alternativas
+                alternativas.Shuffle();
+
+                // Cria a resposta
+                var perguntaResponse = new PerguntaResponse
+                {
+                    IdPergunta = pergunta.IdPergunta,
+                    Enunciado = pergunta.Enunciado,
+                    AlternativaA = alternativas[0],
+                    AlternativaB = alternativas[1],
+                    AlternativaC = alternativas[2],
+                    AlternativaD = alternativas[3]
+                };
+
+                return Ok(new { Success = true, Data = perguntaResponse });
             }
-
-            var pergunta = await _context.Perguntas
-                .Where(p => p.DataDelecao == null)
-                .OrderBy(p => Guid.NewGuid()) // Obter pergunta aleatória
-                .FirstOrDefaultAsync();
-
-            if (pergunta == null)
+            catch (Exception ex)
             {
-                return NotFound(new { Success = false, Message = "Nenhuma pergunta disponível no momento!" });
+                return StatusCode(500, new { Success = false, Message = "Ocorreu um erro ao obter a pergunta.", Details = ex.Message });
             }
-
-            var perguntaResponse = new PerguntaResponse
-            {
-                IdPergunta = pergunta.IdPergunta,
-                Enunciado = pergunta.Enunciado,
-                AlternativaA = pergunta.Alternativa_A,
-                AlternativaB = pergunta.Alternativa_B,
-                AlternativaC = pergunta.Alternativa_C,
-                AlternativaD = pergunta.Alternativa_D,
-            };
-
-            return Ok(new { Success = true, Data = perguntaResponse });
         }
+
 
         // 3. Responder Pergunta
         [HttpPost("responder")]
@@ -108,35 +130,58 @@ namespace AppShowDoMilhao.Controllers
                 return NotFound(new { Success = false, Message = "Pergunta não encontrada!" });
             }
 
-            // Variáveis de controle
-            int perguntasTotais = 5;
-            decimal premioFinal = 1000000m;
-            decimal premioPorPergunta = premioFinal / perguntasTotais;
-
-            var respostaCorreta = pergunta.RespostaCorreta;
-            var respostaCerta = respostaCorreta == request.RespostaEscolhida;
-
-            if (respostaCerta)
+            // Lógica de prêmios por pergunta
+            var premios = new[]
             {
-                partida.PremioObtido += premioPorPergunta;
-                partida.NumRespostasCertas += 1; 
+                new { Pergunta = 1, Acertar = 1000m, Parar = 0m, Errar = 0m },
+                new { Pergunta = 2, Acertar = 5000m, Parar = 1000m, Errar = 500m },
+                new { Pergunta = 3, Acertar = 50000m, Parar = 5000m, Errar = 2500m },
+                new { Pergunta = 4, Acertar = 100000m, Parar = 50000m, Errar = 25000m },
+                new { Pergunta = 5, Acertar = 300000m, Parar = 100000m, Errar = 50000m },
+                new { Pergunta = 6, Acertar = 500000m, Parar = 300000m, Errar = 150000m },
+                new { Pergunta = 7, Acertar = 1000000m, Parar = 500000m, Errar = 0m }
+            };
+
+            // Encontra o prêmio da pergunta atual
+            var premioAtual = premios.FirstOrDefault(p => p.Pergunta == partida.NumPerguntasRespondidas + 1);
+            if (premioAtual == null)
+            {
+                return BadRequest(new { Success = false, Message = "Número da pergunta inválido!" });
+            }
+
+            // Verifica se a resposta está correta
+            var respostaCorreta = pergunta.RespostaCorreta == request.RespostaEscolhida;
+
+            // Lógica de resposta correta, parar ou errar
+            if (request.DecidiuParar)
+            {
+                partida.PremioObtido = premioAtual.Parar;
+                partida.Status = "Parada";
+                _context.Partidas.Update(partida);
+                await _context.SaveChangesAsync();
+                return Ok(new { Success = true, Message = "Você decidiu parar!", PremioObtido = partida.PremioObtido });
+            }
+            else if (respostaCorreta)
+            {
+                partida.PremioObtido = premioAtual.Acertar;
+                partida.NumRespostasCertas += 1;
+            }
+            else
+            {
+                partida.PremioObtido = premioAtual.Errar;
+                partida.Status = "Finalizada";
+                _context.Partidas.Update(partida);
+                await _context.SaveChangesAsync();
+                return Ok(new { Success = true, Message = "Você errou a resposta!", PremioObtido = partida.PremioObtido });
             }
 
             partida.NumPerguntasRespondidas += 1;
 
-            bool partidaFinalizada = partida.NumPerguntasRespondidas >= perguntasTotais;
-
+            // Verifica se a partida está finalizada
+            bool partidaFinalizada = partida.NumPerguntasRespondidas >= 7;
             if (partidaFinalizada)
             {
-                // Verifica se todas as respostas foram corretas para aplicar o prêmio final
-                if (partida.NumRespostasCertas == perguntasTotais)
-                {
-                    partida.Status = "Vitória";
-                }
-                else
-                {
-                    partida.Status = "Finalizada";
-                }
+                partida.Status = "Vitória";
             }
 
             _context.Partidas.Update(partida);
@@ -146,49 +191,96 @@ namespace AppShowDoMilhao.Controllers
         }
 
 
+
         // 4. Usar Ajuda
         [HttpPost("usarAjuda")]
         public async Task<IActionResult> UsarAjuda([FromBody] AjudaRequest request)
         {
-            var partida = await _context.Partidas.FindAsync(request.PartidaId);
-            if (partida == null || partida.Status != "Em Andamento")
+            try
             {
-                return NotFound(new { Success = false, Message = "Partida não encontrada ou já finalizada!" });
+                // Verifica se o usuário está logado
+                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                if (usuarioId == null)
+                {
+                    return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
+                }
+
+                // Verifica se a partida está em andamento
+                var partida = await _context.Partidas.FindAsync(request.PartidaId);
+                if (partida == null || partida.Status != "Em Andamento")
+                {
+                    return NotFound(new { Success = false, Message = "Partida não encontrada ou já finalizada!" });
+                }
+
+                // Verifica se a pergunta existe
+                var pergunta = await _context.Perguntas.FindAsync(request.PerguntaId);
+                if (pergunta == null)
+                {
+                    return NotFound(new { Success = false, Message = "Pergunta não encontrada!" });
+                }
+
+                // Lógica para eliminar duas alternativas erradas
+                var alternativas = new[] { pergunta.Alternativa_A, pergunta.Alternativa_B, pergunta.Alternativa_C, pergunta.Alternativa_D };
+                var alternativasErradas = alternativas.Where(a => a != pergunta.RespostaCorreta).OrderBy(a => Guid.NewGuid()).Take(2).ToList();
+
+                // Atualiza o campo Quant_Utilizacao_Ajuda do usuário
+                var usuario = await _context.Usuarios.FindAsync(usuarioId);
+                if (usuario != null)
+                {
+                    usuario.QuantidadeUtilizacaoAjuda += 1;
+                    _context.Usuarios.Update(usuario);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Retorna as alternativas restantes, embaralhadas
+                return Ok(new
+                {
+                    Success = true,
+                    AlternativasRestantes = alternativasErradas.Append(pergunta.RespostaCorreta).OrderBy(a => Guid.NewGuid())
+                });
             }
-
-            var pergunta = await _context.Perguntas.FindAsync(request.PerguntaId);
-            if (pergunta == null)
+            catch (Exception ex)
             {
-                return NotFound(new { Success = false, Message = "Pergunta não encontrada!" });
+                return StatusCode(500, new { Success = false, Message = "Erro ao usar a ajuda.", Details = ex.Message });
             }
-
-            // Lógica para eliminar duas alternativas erradas
-            var alternativas = new[] { pergunta.Alternativa_A, pergunta.Alternativa_B, pergunta.Alternativa_C, pergunta.Alternativa_D };
-            var alternativasErradas = alternativas.Where(a => a != pergunta.RespostaCorreta).OrderBy(a => Guid.NewGuid()).Take(2).ToList();
-
-            return Ok(new
-            {
-                Success = true,
-                AlternativasRestantes = alternativasErradas.Append(pergunta.RespostaCorreta).OrderBy(a => Guid.NewGuid())
-            });
         }
+
 
         // 5. Finalizar Partida
         [HttpPost("finalizar")]
         public async Task<IActionResult> FinalizarPartida(int partidaId)
         {
+            // Busca a partida pelo ID
             var partida = await _context.Partidas.FindAsync(partidaId);
             if (partida == null || partida.Status != "Em Andamento")
             {
                 return NotFound(new { Success = false, Message = "Partida não encontrada ou já finalizada!" });
             }
 
+            // Finaliza a partida alterando o status
             partida.Status = "Finalizada";
 
+            // Busca o usuário associado à partida
+            var usuario = await _context.Usuarios.FindAsync(partida.IdUsuario); // Supondo que existe um campo UsuarioId na tabela de Partidas
+            if (usuario == null)
+            {
+                return NotFound(new { Success = false, Message = "Usuário associado à partida não encontrado!" });
+            }
+
+            // Incrementa o número de partidas jogadas pelo usuário
+            usuario.NumeroPartidasJogadas++;
+
+            // Salva as alterações no banco de dados
             await _context.SaveChangesAsync();
 
-            return Ok(new { Success = true, Message = "Partida finalizada com sucesso!", PremioObtido = partida.PremioObtido });
+            return Ok(new
+            {
+                Success = true,
+                Message = "Partida finalizada com sucesso!",
+                PremioObtido = partida.PremioObtido
+            });
         }
+
 
         // 6. Obter Histórico de Partidas
         [HttpGet("historico")]

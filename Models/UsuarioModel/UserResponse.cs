@@ -16,7 +16,11 @@ namespace AppShowDoMilhao.Models.UsuarioModel
 
         public int NumeroPartidasJogadas { get; set; }
 
-        public int NumeroTotalPerguntas { get; set; }
+        public int NumTotalPerguntasRespondidas { get; set; } // Renomeado para refletir a model
+
+        public int NumTotalPerguntasRejeitadas { get; set; } // Adicionado
+
+        public int NumTotalPerguntasAceita { get; set; } // Adicionado
 
         public decimal PremiacaoTotal { get; set; }
 
@@ -27,6 +31,5 @@ namespace AppShowDoMilhao.Models.UsuarioModel
         public int NumeroDerrotasParada { get; set; }
 
         public DateTime DataCriacao { get; set; }
-
     }
 }
