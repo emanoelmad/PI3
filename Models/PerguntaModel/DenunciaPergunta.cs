@@ -4,6 +4,7 @@ namespace AppShowDoMilhao.Models.PerguntaModel
 {
     public class DenunciaPergunta
     {
+        [Key]
         public int IdDenuncia { get; set; }
         public int IdPergunta { get; set; }
         public int IdUsuario { get; set; }
