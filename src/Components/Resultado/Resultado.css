@@ -1,0 +1,21 @@
+/* Resultado.css */
+.resultado-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.resultado-container button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+    margin: 5px;
+}
+
+.resultado-container button:hover {
+    background-color: #0056b3;
+}

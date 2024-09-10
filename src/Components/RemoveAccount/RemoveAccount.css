@@ -1,0 +1,41 @@
+.remove-account-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.remove-account-container h1 {
+    margin-bottom: 20px;
+}
+
+.remove-account-container .form-group {
+    margin-bottom: 15px;
+}
+
+.remove-account-container label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.remove-account-container input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.remove-account-container button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin: 10px;
+    transition: background-color 0.2s ease;
+}
+
+.remove-account-container button:hover {
+    background-color: #0056b3;
+}

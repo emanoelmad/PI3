@@ -1,0 +1,77 @@
+/* src/Components/Welcome/Welcome.css */
+.welcome-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background-color: #1642c0;
+    color: #ffffff;
+    font-family: 'Arial', sans-serif;
+    background-image: url("/src/assets/show.png1.png"); /* Caminho da imagem */
+    background-size: 40%; /* Ajusta o tamanho da imagem para 40% da largura do contêiner */
+    background-position: left; /* Posiciona a imagem no lado esquerdo */
+    background-repeat: no-repeat; /* Evita repetição da imagem */
+}
+
+.welcome-container h1 {
+    font-size: 3rem;
+    margin-bottom: 40px;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+    transition: transform 0.3s ease;
+}
+
+.welcome-container h1:hover {
+    transform: scale(1.05);
+}
+
+.button-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.welcome-container button {
+    background-color: #0984e3;
+    border: none;
+    color: white;
+    padding: 10px 30px;
+    border-radius: 25px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    width: 200px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.welcome-container button::before,
+.welcome-container button::after {
+    content: none;
+}
+
+.welcome-container button:hover {
+    background-color: #74b9ff;
+    transform: translateY(-5px);
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+.welcome-container button:active {
+    transform: translateY(0px);
+    box-shadow: none;
+}
+
+@media (max-width: 600px) {
+    .welcome-container h1 {
+        font-size: 2rem;
+    }
+
+    .welcome-container button {
+        padding: 8px 25px;
+        font-size: 1rem;
+        width: 180px;
+    }
+}

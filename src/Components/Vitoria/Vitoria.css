@@ -1,0 +1,51 @@
+.vitoria-container {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(to bottom, #92d296, #f5f5f5);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    animation: backgroundAnimation 5s ease-in-out infinite;
+}
+
+@keyframes backgroundAnimation {
+    0% { background-color: #12a649; }
+    50% { background-color: #f5f5f5; }
+    100% { background-color: #12a649; }
+}
+
+.title {
+    font-size: 3em;
+    color: #4caf50;
+    animation: bounce 1s ease infinite;
+}
+
+.message {
+    font-size: 1.5em;
+    color: #333;
+    margin: 20px 0;
+}
+
+.score, .incorrect-answers {
+    font-size: 1.2em;
+    color: #555;
+}
+
+.back-link {
+    font-size: 1em;
+    color: #2196f3;
+    text-decoration: none;
+    margin-top: 20px;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-30px); }
+    60% { transform: translateY(-15px); }
+}
