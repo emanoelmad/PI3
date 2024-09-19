@@ -51,6 +51,21 @@ a:hover {
 }
 
 .error-message {
-    color: #ff4d4d;
+    color: white;
     margin-top: 10px;
+}
+
+.login-links {
+    display: flex;
+    flex-direction: column; /* Coloca os links em uma coluna, um embaixo do outro */
+    align-items: center; /* Centraliza os links horizontalmente */
+    gap: 10px; /* Espaço entre os links */
+    margin-top: 20px; /* Espaçamento superior, se necessário */
+}
+
+.link {
+    text-decoration: none; /* Remove o sublinhado dos links */
+    color: white; /* Cor dos links */
+    font-size: 16px; /* Tamanho da fonte */
+    font-weight: bold;
 }

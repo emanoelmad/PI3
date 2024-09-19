@@ -1,8 +1,8 @@
 body {
-    margin: 0; 
+    margin: 0;
     padding: 0;
-    background-color: #1642c0; 
-    color: #1642c0; 
+    background-color: #1642c0;
+    color: #1642c0;
     font-family: 'Arial', sans-serif;
 }
 
@@ -10,71 +10,90 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px; 
-    background-color: #fdfdfd; 
-    color: #000000; 
-    border-radius: 19px; 
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); 
-    max-width: 300px; 
-    margin: 50px auto; 
-    min-height: 80vh; 
+    padding: 20px;
+    background-color: #fdfdfd;
+    color: #000000;
+    border-radius: 19px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    max-width: 400px; /* Ajustado para acomodar os novos campos */
+    margin: 50px auto;
+    min-height: 80vh;
 }
 
-.editar-conta-container h1 {
-    margin-bottom: 20px;
-    color: #0984e3; 
-}
+    .editar-conta-container h1 {
+        margin-bottom: 20px;
+        color: #0984e3;
+    }
 
-.editar-conta-container input {
-    margin: 10px 0;
-    padding: 12px;
-    width: 100%;
-    max-width: 260px; 
-    border: 1px solid #ddd;
-    border-radius: 25px; 
-    font-size: 16px;
-    box-sizing: border-box;
-    background-color: #ffffff; 
-    color: #000000; 
-}
+    .editar-conta-container input {
+        margin: 10px 0;
+        padding: 12px;
+        width: 100%;
+        max-width: 360px; /* Ajustado para acomodar os novos campos */
+        border: 1px solid #ddd;
+        border-radius: 25px;
+        font-size: 16px;
+        box-sizing: border-box;
+        background-color: #ffffff;
+        color: darkblue;
+    }
 
-.editar-conta-container input:focus {
-    border-color: #0984e3;
-    outline: none;
-}
+        .editar-conta-container input:focus {
+            border-color: #0984e3;
+            outline: none;
+        }
 
-.editar-conta-container button {
-    margin: 10px;
-    padding: 10px 20px; 
-    background-color: #0984e3; 
-    color: #fff;
-    border: none;
-    border-radius: 25px; 
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
+    .editar-conta-container button {
+        margin: 10px;
+        padding: 10px 20px;
+        background-color: #0984e3;
+        color: #fff;
+        border: none;
+        border-radius: 25px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
 
-.editar-conta-container button:hover {
-    background-color: #074f8c;
-}
+        .editar-conta-container button:hover {
+            background-color: #074f8c;
+        }
 
-.editar-conta-container button:active {
-    background-color: #053a6b;
-}
+        .editar-conta-container button:active {
+            background-color: #053a6b;
+        }
 
 .success-message {
     font-size: 16px;
     margin-top: 20px;
     padding: 10px;
-    border-radius: 6px; 
+    border-radius: 6px;
     background-color: #32baf0;
-    color: #fff;
+    color: #fff; /* Texto branco para contraste */
     animation: fadeIn 4s ease-out;
-    max-width: 250px;
-    width: 100%; 
-    text-align: center; 
-    box-sizing: border-box; 
+    max-width: 300px; /* Ajustado para acomodar o novo texto */
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+}
+/* EditarConta.css */
+
+.editar-conta-container h2 {
+    color: #3498db; /* Cor azul, você pode substituir pelo código da cor desejada */
+}
+
+
+.error-message {
+    font-size: 16px;
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 6px;
+    background-color: #e74c3c; /* Ajustado para um tom mais visível */
+    color: white; /* Texto branco para contraste */
+    max-width: 300px; /* Ajustado para acomodar o novo texto */
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
 }
 
 @keyframes fadeIn {
@@ -82,6 +101,7 @@ body {
         opacity: 0;
         transform: translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);

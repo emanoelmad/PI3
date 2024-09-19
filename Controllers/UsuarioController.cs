@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AppShowDoMilhao.Services;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 
 namespace AppShowDoMilhao.Controllers
@@ -122,7 +123,7 @@ namespace AppShowDoMilhao.Controllers
                 }
 
                 // Execução da consulta e mapeamento para UserResponse
-                var usuarios = await query.Select(u => new UserResponse
+                var usuariosList = await query.Select(u => new UserResponse
                 {
                     UsuarioId = u.UsuarioId,
                     Nome = u.Nome,
@@ -141,7 +142,7 @@ namespace AppShowDoMilhao.Controllers
                 }).ToListAsync();
 
                 // Verifica se a lista de usuários está vazia
-                if (!usuarios.Any())
+                if (!usuariosList.Any())
                 {
                     return NotFound(new
                     {
@@ -150,11 +151,22 @@ namespace AppShowDoMilhao.Controllers
                     });
                 }
 
-                // Retorna a lista de usuários
+                // Usar uma fila para organizar o processamento dos usuários
+                var filaUsuarios = new Queue<UserResponse>(usuariosList);
+
+                // Processamento da fila
+                var usuariosProcessados = new List<UserResponse>();
+                while (filaUsuarios.Count > 0)
+                {
+                    var usuario = filaUsuarios.Dequeue(); // Retira o usuário da fila
+                    usuariosProcessados.Add(usuario); // Adiciona o usuário processado à lista
+                }
+
+                // Retorna a lista de usuários processados
                 return Ok(new
                 {
                     Success = true,
-                    Data = usuarios
+                    Data = usuariosProcessados
                 });
             }
             catch (Exception ex)
@@ -164,10 +176,11 @@ namespace AppShowDoMilhao.Controllers
                 {
                     Success = false,
                     Message = "Ocorreu um erro ao processar sua solicitação.",
-                    Details = ex.Message // Em produção, você pode querer remover ou logar os detalhes do erro ao invés de retorná-los.
+                    Details = ex.Message
                 });
             }
         }
+
 
         // Permite que este método seja acessado sem autenticação
         [AllowAnonymous]
@@ -221,27 +234,26 @@ namespace AppShowDoMilhao.Controllers
         [HttpPut("update-user")]
         public async Task<IActionResult> UpdateUserById([FromBody] UpdateUserByIdRequest request)
         {
+            // Obtém o ID do usuário logado pela sessão ou pelo User.Identity
+            if (request.Id == null)
+            {
+                return Unauthorized(new { Success = false, Message = "Usuário não autenticado." });
+            }
+
+            // Converte o ID obtido em número (int)
+            if (!await _context.Usuarios.AnyAsync(u => u.UsuarioId == request.Id))
+            {
+                return BadRequest(new { Success = false, Message = "ID do usuário inválido." });
+            }
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(new { Success = false, Message = "Dados inválidos." });
             }
 
-            // Verifica se o usuário está logado
-            var loggedInUserId = HttpContext.Session.GetInt32("UsuarioId");
-            if (loggedInUserId == null)
-            {
-                return Unauthorized(new { Success = false, Message = "Usuário não está logado." });
-            }
-
-            // Verifica se o usuário está tentando atualizar seu próprio perfil
-            if (loggedInUserId.Value != request.UsuarioId)
-            {
-                return Forbid(); // Não é necessário fornecer uma mensagem aqui. O `Forbid` é um status 403.
-            }
-
             try
             {
-                var usuario = await _context.Usuarios.FindAsync(request.UsuarioId);
+                var usuario = await _context.Usuarios.FindAsync(request.Id);
                 if (usuario == null)
                 {
                     return NotFound(new { Success = false, Message = "Usuário não encontrado." });

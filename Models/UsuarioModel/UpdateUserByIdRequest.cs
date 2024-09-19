@@ -5,8 +5,7 @@ namespace AppShowDoMilhao.Models.UsuarioModel
 {
     public class UpdateUserByIdRequest
     {
-        [Required]
-        public int UsuarioId { get; set; }
+        public int Id { get; set; }
 
         [StringLength(100)]
         public string? Nome { get; set; }

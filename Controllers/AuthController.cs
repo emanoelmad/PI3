@@ -44,7 +44,7 @@ namespace AppShowDoMilhao.Controllers
             // Se a autenticação for bem-sucedida, armazene o estado de login na sessão
             HttpContext.Session.SetInt32("UsuarioId", usuario.UsuarioId);
 
-            return Ok(new { Success = true, Message = "Login bem-sucedido" });
+            return Ok(new { Success = true, Message = "Login bem-sucedido", Id = usuario.UsuarioId });
         }
 
 

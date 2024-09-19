@@ -1,20 +1,23 @@
-import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { useContext } from 'react';
 import './Derrota.css';
+import { AuthContext } from "../../Context/AuthContext";
+import { useNavigate } from 'react-router-dom';
 
 const Derrota = () => {
-    const location = useLocation();
-    const { state } = location;
-    const score = state?.score || 0;
-    const incorrectAnswers = state?.incorrectAnswers || 0;
+    const { pontuacao, setPontuacao } = useContext(AuthContext);
+    const navigate = useNavigate();
+
+    const handleHome = () => {
+        setPontuacao(0);
+        navigate('/welcome');
+    };
 
     return (
         <div className="derrota-container">
             <h1 className="title">💔 Você Perdeu! 💔</h1>
             <p className="message">Infelizmente, você não conseguiu vencer o jogo desta vez.</p>
-            <p className="score">Pontuação Final: R$ {score}</p>
-            <p className="incorrect-answers">Número de Derrotas por Erro: {incorrectAnswers}</p>
-            <a className="back-link" href="/">Voltar para a Tela Inicial</a>
+            <p className="score">Pontuação Final: R$ {pontuacao}</p>
+            <a className="back-link" onClick={handleHome}>Voltar para a Tela Inicial</a>
         </div>
     );
 };

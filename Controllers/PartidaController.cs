@@ -22,22 +22,21 @@ namespace AppShowDoMilhao.Controllers
             _context = context;
         }
 
-        // 1. Iniciar Nova Partida
-        [HttpPost("iniciar")]
-        public async Task<IActionResult> IniciarPartida()
+        [HttpGet("iniciar/{userId}")]
+        public async Task<IActionResult> IniciarPartida(int userId)
         {
             try
             {
 
-                var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
-                if (usuarioId == null)
-                {
-                    return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
-                }
+                //var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+                //if (usuarioId == null)
+                //{
+                //    return Unauthorized(new { Success = false, Message = "Usuário não está logado!" });
+                //}
 
                 var novaPartida = new Partida
                 {
-                    IdUsuario = usuarioId.Value,
+                    IdUsuario = userId,
                     DataPartida = DateTime.UtcNow,
                     Status = "Em Andamento"
                 };
@@ -66,23 +65,29 @@ namespace AppShowDoMilhao.Controllers
                 }
 
                 // Filtra perguntas com status "Aceita" e que não foram deletadas
-                var pergunta = await _context.Perguntas
+                var perguntas = await _context.Perguntas
                     .Where(p => p.Status == "Aceita" && p.DataDelecao == null) // Filtra perguntas com status "Aceita"
-                    .OrderBy(p => Guid.NewGuid()) // Obter pergunta aleatória
-                    .FirstOrDefaultAsync();
+                    .OrderBy(p => Guid.NewGuid()) // Obter perguntas em ordem aleatória
+                    .ToListAsync();
 
-                if (pergunta == null)
+                if (perguntas == null || !perguntas.Any())
                 {
                     return NotFound(new { Success = false, Message = "Nenhuma pergunta disponível no momento!" });
                 }
 
+                // Usando uma pilha para empilhar as perguntas aleatórias
+                var pilhaPerguntas = new Stack<Pergunta>(perguntas);
+
+                // Pop (retira) a última pergunta inserida na pilha
+                var perguntaAtual = pilhaPerguntas.Pop();
+
                 // Cria uma lista das alternativas
                 var alternativas = new List<string>
                 {
-                    pergunta.Alternativa_A,
-                    pergunta.Alternativa_B,
-                    pergunta.Alternativa_C,
-                    pergunta.Alternativa_D
+                    perguntaAtual.Alternativa_A,
+                    perguntaAtual.Alternativa_B,
+                    perguntaAtual.Alternativa_C,
+                    perguntaAtual.Alternativa_D
                 };
 
                 // Embaralha as alternativas
@@ -91,12 +96,13 @@ namespace AppShowDoMilhao.Controllers
                 // Cria a resposta
                 var perguntaResponse = new PerguntaResponse
                 {
-                    IdPergunta = pergunta.IdPergunta,
-                    Enunciado = pergunta.Enunciado,
+                    IdPergunta = perguntaAtual.IdPergunta,
+                    Enunciado = perguntaAtual.Enunciado,
                     AlternativaA = alternativas[0],
                     AlternativaB = alternativas[1],
                     AlternativaC = alternativas[2],
-                    AlternativaD = alternativas[3]
+                    AlternativaD = alternativas[3],
+                    RespostaCorreta = perguntaAtual.RespostaCorreta
                 };
 
                 return Ok(new { Success = true, Data = perguntaResponse });
@@ -106,8 +112,6 @@ namespace AppShowDoMilhao.Controllers
                 return StatusCode(500, new { Success = false, Message = "Ocorreu um erro ao obter a pergunta.", Details = ex.Message });
             }
         }
-
-
 
         // 3. Responder Pergunta
         [HttpPost("responder")]
